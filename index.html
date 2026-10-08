@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="cs" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EcoKousky | Udržitelná móda & Lokální tvůrci</title>
+    <meta name="theme-color" content="#008080">
+    <link id="manifest-link" rel="manifest" href="">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            50: '#e6f7f7',
+                            100: '#ccf0f0',
+                            200: '#99e0e0',
+                            500: '#00a8a8',
+                            600: '#008080',
+                            700: '#006666',
+                            800: '#004d4d',
+                            900: '#003333',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex justify-center bg-slate-200 antialiased">
+
+    <div class="w-full max-w-md bg-white min-h-screen flex flex-col justify-between shadow-2xl relative overflow-hidden pb-20">
+
+        <!-- HEADER -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-black text-teal-600 tracking-tight flex items-center gap-1.5">
+                        <span class="text-2xl">🌱</span> EcoKousky
+                    </h1>
+                    <p class="text-[10px] text-slate-500 font-semibold tracking-wide uppercase">Udržitelná móda & Lokální tvůrci</p>
+                </div>
+                
+                <!-- Background Auto-Discovery Indicator -->
+                <div id="discovery-badge" class="flex items-center gap-1.5 bg-teal-50 text-teal-700 text-xs font-bold px-2.5 py-1 rounded-full border border-teal-200">
+                    <span class="w-2 h-2 rounded-full bg-teal-500 animate-ping"></span>
+                    <span id="discovery-text" class="text-[11px]">Hledám novinky...</span>
+                </div>
+            </div>
+
+            <!-- Search Box -->
+            <div class="mt-2.5 relative">
+                <input type="text" id="search-input" oninput="handleSearch()" placeholder="Hledat kousek nebo značku..." 
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-grow">
+
+            <!-- TOAST NOTIFICATION CONTAINER -->
+            <div id="toast-container" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-xs pointer-events-none transition-all duration-300 opacity-0 translate-y-[-10px]">
+                <div id="toast-content" class="bg-slate-900/90 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl backdrop-blur-md flex items-center justify-between gap-2">
+                    <span id="toast-message">Zpráva</span>
+                    <span class="text-teal-400">✓</span>
+                </div>
+            </div>
+
+            <!-- TAB 1: FEED / OBJEVEJ -->
+            <section id="tab-feed" class="tab-content block">
+                <!-- Filter Bar -->
+                <div class="bg-white border-b border-slate-100 py-2.5 px-4 sticky top-[97px] z-20">
+                    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
+                        <button onclick="setCategoryFilter('Vše')" class="filter-cat-btn px-3 py-1.5 rounded-full font-bold whitespace-nowrap bg-teal-600 text-white shadow-sm transition-all" data-cat="Vše">Vše</button>
+                        <button onclick="setCategoryFilter('Dámské')" class="filter-cat-btn px-3 py-1.5 rounded-full font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all" data-cat="Dámské">Dámské</button>
+                        <button onclick="setCategoryFilter('Pánské')" class="filter-cat-btn px-3 py-1.5 rounded-full font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all" data-cat="Pánské">Pánské</button>
+                        <button onclick="setCategoryFilter('Lokální tvůrci')" class="filter-cat-btn px-3 py-1.5 rounded-full font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all" data-cat="Lokální tvůrci">🇨🇿🇸🇰 Lokální tvůrci</button>
+                    </div>
+
+                    <!-- Color & Size Dropdown Selectors -->
+                    <div class="flex gap-2 mt-2 pt-2 border-t border-slate-100">
+                        <select id="color-select" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-teal-500 font-medium">
+                            <option value="Vše">Všechny barvy</option>
+                            <option value="Bílá">Bílá</option>
+                            <option value="Černá">Černá</option>
+                            <option value="Modrá">Modrá</option>
+                            <option value="Červená">Červená</option>
+                            <option value="Zelená">Zelená</option>
+                            <option value="Přírodní">Přírodní</option>
+                        </select>
+
+                        <select id="size-select" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-1 focus:ring-teal-500 font-medium">
+                            <option value="Vše">Všechny velikosti</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="Oversize">Oversize</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Live Auto Status Message -->
+                <div id="status-bar" class="px-4 py-2 bg-teal-50/60 text-teal-800 text-[11px] font-medium text-center animate-pulse-subtle border-b border-teal-100/50">
+                    🔎 Automaticky skenujeme certifikované dílny v ČR a SR...
+                </div>
+
+                <!-- Product Grid -->
+                <div class="p-4 grid grid-cols-2 gap-3.5" id="product-grid">
+                    <!-- Products rendered via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 2: OBLÍBENÉ -->
+            <section id="tab-favorites" class="tab-content hidden p-4">
+                <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <span>💚</span> Uložené kousky
+                </h2>
+                <div id="favorites-grid" class="grid grid-cols-2 gap-3.5">
+                    <!-- Favorite items rendered via JS -->
+                </div>
+                <div id="favorites-empty" class="text-center py-16 px-4">
+                    <span class="text-4xl block mb-2">🤍</span>
+                    <p class="text-sm font-semibold text-slate-700">Zatím nemáte žádné oblíbené kousky.</p>
+                    <p class="text-xs text-slate-400 mt-1">Srdíčkem si uložte oblečení, které vás zaujme.</p>
+                </div>
+            </section>
+
+            <!-- TAB 3: ZNAČKY -->
+            <section id="tab-brands" class="tab-content hidden p-4">
+                <h2 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+                    <span>🌿</span> Ověření lokalní tvůrci
+                </h2>
+                <p class="text-xs text-slate-500 mb-4">Všichni tvůrci splňují přísná kritéria etické a udržitelné výroby.</p>
+                
+                <div id="brands-list" class="space-y-3">
+                    <!-- Brands list rendered via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 4: KOŠÍK -->
+            <section id="tab-cart" class="tab-content hidden p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <span>🛍️</span> Košík v aplikaci
+                    </h2>
+                    <span class="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full" id="cart-total-badge">
+                        Celkem: 0 Kč
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mb-4">Položky jsou rozdělené podle značek. Každý nákup dokončíte přímo na webu vybraného tvůrce.</p>
+
+                <div id="cart-grouped-container" class="space-y-6">
+                    <!-- Grouped cart rendered via JS -->
+                </div>
+
+                <div id="cart-empty" class="text-center py-16 px-4">
+                    <span class="text-4xl block mb-2">🧺</span>
+                    <p class="text-sm font-semibold text-slate-700">Váš košík je prázdný.</p>
+                    <p class="text-xs text-slate-400 mt-1">Vyberte si udržitelný kousek a přidejte ho do košíku.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="fixed bottom-0 w-full max-w-md bg-white border-t border-slate-200 py-2 px-3 z-40 shadow-lg">
+            <div class="flex justify-around items-center">
+                <button onclick="switchTab('feed')" class="nav-btn flex flex-col items-center gap-0.5 text-teal-600" data-tab="feed">
+                    <span class="text-xl">✨</span>
+                    <span class="text-[10px] font-bold">Objevuj</span>
+                </button>
+
+                <button onclick="switchTab('favorites')" class="nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-teal-600 transition-colors relative" data-tab="favorites">
+                    <span class="text-xl">💚</span>
+                    <span class="text-[10px] font-bold">Oblíbené</span>
+                    <span id="fav-badge" class="hidden absolute -top-1 right-2 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full min-w-[16px]">0</span>
+                </button>
+
+                <button onclick="switchTab('brands')" class="nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-teal-600 transition-colors" data-tab="brands">
+                    <span class="text-xl">🌿</span>
+                    <span class="text-[10px] font-bold">Značky</span>
+                </button>
+
+                <button onclick="switchTab('cart')" class="nav-btn flex flex-col items-center gap-0.5 text-slate-400 hover:text-teal-600 transition-colors relative" data-tab="cart">
+                    <span class="text-xl">🛍️</span>
+                    <span class="text-[10px] font-bold">Košík</span>
+                    <span id="cart-badge" class="hidden absolute -top-1 right-1 bg-teal-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full min-w-[16px]">0</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- BRAND INFO & REVIEWS MODAL -->
+        <div id="brand-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                <div class="bg-teal-600 p-4 text-white relative">
+                    <button onclick="closeModal('brand-modal')" class="absolute top-3 right-3 text-white/80 hover:text-white text-xl font-bold p-1">✕</button>
+                    <span class="text-xs font-bold uppercase tracking-widest text-teal-200 block mb-1">Profil Tvůrce</span>
+                    <h3 id="modal-brand-title" class="text-xl font-black">Název značky</h3>
+                    <div id="modal-brand-stars" class="text-yellow-300 text-xs font-bold mt-1 flex items-center gap-1">
+                        ⭐⭐⭐⭐⭐ 4.9/5
+                    </div>
+                </div>
+
+                <div class="p-4 overflow-y-auto space-y-4 text-xs text-slate-600">
+                    <!-- Certifications -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1.5 uppercase tracking-wider text-[10px]">Certifikace & Principy:</h4>
+                        <div id="modal-brand-badges" class="flex flex-wrap gap-1.5">
+                            <!-- Badges -->
+                        </div>
+                    </div>
+
+                    <!-- Story -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-1 uppercase tracking-wider text-[10px]">Příběh značky:</h4>
+                        <p id="modal-brand-story" class="leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            Popis značky...
+                        </p>
+                    </div>
+
+                    <!-- Reviews -->
+                    <div>
+                        <h4 class="font-bold text-slate-900 mb-2 uppercase tracking-wider text-[10px]">Recenze od zákazníků:</h4>
+                        <div id="modal-brand-reviews" class="space-y-2">
+                            <!-- Reviews list -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border-t border-slate-100">
+                    <button onclick="closeModal('brand-modal')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition-colors">
+                        Zavřít profil
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHECKOUT SIMULATION MODAL -->
+        <div id="checkout-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-5 text-center">
+                <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    🚀
+                </div>
+                <h3 id="checkout-modal-title" class="text-base font-bold text-slate-900 mb-1">Přesměrování na e-shop</h3>
+                <p class="text-xs text-slate-500 mb-3">Aplikace pro vás vygenerovala přímý kód košíku pro značku <strong id="checkout-brand-name" class="text-teal-700">...</strong></p>
+
+                <!-- Generated Deep Link Box -->
+                <div class="bg-slate-100 p-2.5 rounded-xl border border-slate-200 text-left mb-4">
+                    <span class="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Generovaná URL adresa:</span>
+                    <code id="checkout-url" class="text-[11px] text-teal-800 break-all font-mono block bg-white p-2 rounded border border-slate-200">
+                        https://brand-shop.cz/cart?add=101,102
+                    </code>
+                </div>
+
+                <p class="text-[11px] text-slate-500 mb-4 leading-relaxed">
+                    Všechny vybrané položky budou automaticky vloženy do košíku na oficiálním webu tvůrce.
+                </p>
+
+                <div class="flex gap-2">
+                    <button onclick="closeModal('checkout-modal')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition-colors">
+                        Zpět do appky
+                    </button>
+                    <button onclick="confirmRedirect()" class="w-1/2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs transition-colors shadow-md">
+                        Otevřít web
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // -------------------------------------------------------------
+        // PWA MANIFEST & SERVICE WORKER BLOB REGISTRATION
+        // -------------------------------------------------------------
+        const pwaManifest = {
+            "name": "EcoKousky",
+            "short_name": "EcoKousky",
+            "description": "Udržitelná móda a lokální tvůrci",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#008080",
+            "icons": [{
+                "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgZmlsbD0iIzAwODA4MCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjgwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBkeT0iLjM1ZW0iPkU8L3RleHQ+PC9zdmc+",
+                "sizes": "192x192",
+                "type": "image/svg+xml"
+            }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(pwaManifest)], { type: 'application/json' });
+        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+
+        const swCode = `
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('fetch', e => {
+                e.respondWith(fetch(e.request).catch(() => new Response('EcoKousky funguje offline.')));
+            });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        }
+
+        // -------------------------------------------------------------
+        // DATABASE & STATE MANAGERS
+        // -------------------------------------------------------------
+        const BRANDS_DB = {
+            "LinenLove (CZ)": {
+                rating: "4.9/5",
+                badges: ["Zero-waste", "Biobavlna", "Lokální výroba", "100% Len"],
+                story: "Rodinná dílna z Podkrkonoší specializující se na ručně šité oděvy z prémiového certifikovaného evropského lnu. Výroba probíhá s nulovým odpadem.",
+                reviews: [
+                    "Nádherné lněné šaty, skvěle sedí a materiál je neskutečně příjemný. - Jana M.",
+                    "Poctivá česká práce, balíček přišel bez plastů! - Lenka K."
+                ],
+                domain: "https://www.linenlove.cz"
+            },
+            "ReWear (SK)": {
+                rating: "4.8/5",
+                badges: ["Upcyklace", "Zero-waste", "Ruční práce"],
+                story: "Slovenský udržitelný projekt vrací nový život starému denimu a textilním zbytkovým materiálům. Každý kousek je naprostý originál.",
+                reviews: [
+                    "Bunda je naprosto unikátní, v okolí mi ji všichni chválí. - Peter S."
+                ],
+                domain: "https://www.rewear.sk"
+            },
+            "SlowStitch (CZ)": {
+                rating: "5.0/5",
+                badges: ["100% Merino", "Lokální výroba", "Fair Trade"],
+                story: "Malé pletařské studio z Brna tvořící hřejivé pleteniny výhradně z eticky získávané české merino vlny.",
+                reviews: [
+                    "Svetr vůben nekouše a zahřeje i v té největší zimě. - Eliška R."
+                ],
+                domain: "https://www.slowstitch.cz"
+            },
+            "HempCraft (CZ)": {
+                rating: "4.7/5",
+                badges: ["Konopné vlákno", "Ekologické barvení", "Lokální výroba"],
+                story: "Značka zaměřená na využití konopného vlákna pro jeho extrémní odolnost, nízkou spotřebu vody při pěstování a antibakteriální vlastnosti.",
+                reviews: [
+                    "Kalhoty mám druhý rok a vypadají pořád jako nové. - Michal T."
+                ],
+                domain: "https://www.hempcraft.cz"
+            },
+            "EcoBasics (CZ)": {
+                rating: "4.9/5",
+                badges: ["GOTS Certifikace", "Biobavlna", "Lokalní výroba"],
+                story: "Kvalitní a poctivé základní šatníkové kousky šité na Severní Moravě z nejjemnější organické bavlny.",
+                reviews: [
+                    "Nejlepší základní tričko, jaké jsem kdy měl. - David O."
+                ],
+                domain: "https://www.ecobasics.cz"
+            },
+            "VlnaStudio (SK)": {
+                rating: "4.8/5",
+                badges: ["100% Ovčí vlna", "Tatranská tradice", "Přírodní"],
+                story: "Dílna pod Tatrami udržující tradiční postupy zpracování vlny od lokálních chovatelů.",
+                reviews: [
+                    "Čepice je neuvěřitelně hřejivá a má krásnou přírodní vůni. - Zuzana H."
+                ],
+                domain: "https://www.vlnastudio.sk"
+            }
+        };
+
+        const INITIAL_PRODUCTS = [
+            {
+                id: 1,
+                name: "Minimalistické lněné šaty",
+                brand: "LinenLove (CZ)",
+                price: 2490,
+                img: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=500&q=80",
+                color: "Bílá",
+                size: "M",
+                category: "Dámské",
+                isLocal: true
+            },
+            {
+                id: 2,
+                name: "Upcyklovaná denim bunda",
+                brand: "ReWear (SK)",
+                price: 3100,
+                img: "https://images.unsplash.com/photo-1551028719-012584462008?auto=format&fit=crop&w=500&q=80",
+                color: "Modrá",
+                size: "Oversize",
+                category: "Dámské",
+                isLocal: true
+            },
+            {
+                id: 3,
+                name: "Ručně pletený merino svetr",
+                brand: "SlowStitch (CZ)",
+                price: 3800,
+                img: "https://images.unsplash.com/photo-1434389678232-067960d7045f?auto=format&fit=crop&w=500&q=80",
+                color: "Červená",
+                size: "L",
+                category: "Dámské",
+                isLocal: true
+            },
+            {
+                id: 4,
+                name: "Odolné konopné kalhoty",
+                brand: "HempCraft (CZ)",
+                price: 2150,
+                img: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=500&q=80",
+                color: "Zelená",
+                size: "S",
+                category: "Pánské",
+                isLocal: true
+            }
+        ];
+
+        const AUTO_DISCOVERED_PRODUCTS = [
+            {
+                id: 5,
+                name: "Basic triko z biobavlny",
+                brand: "EcoBasics (CZ)",
+                price: 790,
+                img: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=500&q=80",
+                color: "Černá",
+                size: "XL",
+                category: "Pánské",
+                isLocal: true
+            },
+            {
+                id: 6,
+                name: "Tatranská čepice a šála set",
+                brand: "VlnaStudio (SK)",
+                price: 1290,
+                img: "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=500&q=80",
+                color: "Přírodní",
+                size: "M",
+                category: "Dámské",
+                isLocal: true
+            },
+            {
+                id: 7,
+                name: "Lněná košile s dlouhým rukávem",
+                brand: "LinenLove (CZ)",
+                price: 1890,
+                img: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=500&q=80",
+                color: "Bílá",
+                size: "L",
+                category: "Pánské",
+                isLocal: true
+            }
+        ];
+
+        // APP STATE VARIABLES
+        let products = [...INITIAL_PRODUCTS];
+        let favorites = new Set();
+        let cart = []; // [{ product, quantity }]
+        let activeCategory = 'Vše';
+        let searchQuery = '';
+        let pendingRedirectBrand = null;
+
+        // -------------------------------------------------------------
+        // APPLICATION RENDERING & LOGIC
+        // -------------------------------------------------------------
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+
+            const colorFilter = document.getElementById('color-select').value;
+            const sizeFilter = document.getElementById('size-select').value;
+
+            const filtered = products.filter(p => {
+                // Category filter
+                if (activeCategory === 'Dámské' && p.category !== 'Dámské') return false;
+                if (activeCategory === 'Pánské' && p.category !== 'Pánské') return false;
+                if (activeCategory === 'Lokální tvůrci' && !p.isLocal) return false;
+
+                // Color filter
+                if (colorFilter !== 'Vše' && p.color !== colorFilter) return false;
+
+                // Size filter
+                if (sizeFilter !== 'Vše' && p.size !== sizeFilter) return false;
+
+                // Search query
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    const matchName = p.name.toLowerCase().includes(q);
+                    const matchBrand = p.brand.toLowerCase().includes(q);
+                    if (!matchName && !matchBrand) return false;
+                }
+
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-2 text-center py-12">
+                        <span class="text-3xl block mb-2">🔍</span>
+                        <p class="text-xs font-semibold text-slate-600">Nebyly nalezeny žádné kousky.</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Zkuste změnit nastavení filtrů.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const isFav = favorites.has(p.id);
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col justify-between relative group">
+                        <!-- Favorite Heart Button -->
+                        <button onclick="toggleFavorite(${p.id})" class="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center transition-transform active:scale-90">
+                            <span class="${isFav ? 'text-teal-600' : 'text-slate-300'} text-base">
+                                ${isFav ? '💚' : '🤍'}
+                            </span>
+                        </button>
+
+                        <div>
+                            <!-- Image -->
+                            <div class="relative pt-[125%] bg-teal-50 overflow-hidden">
+                                <img src="${p.img}" alt="${p.name}" loading="lazy" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            </div>
+
+                            <!-- Details -->
+                            <div class="p-3">
+                                <button onclick="openBrandModal('${p.brand}')" class="text-[10px] font-black text-teal-600 uppercase tracking-wider flex items-center gap-1 hover:underline">
+                                    ${p.brand} ⓘ
+                                </button>
+                                <h3 class="text-xs font-bold text-slate-800 mt-1 line-clamp-2 leading-snug">${p.name}</h3>
+                                
+                                <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+                                    <span class="text-[9px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">${p.size}</span>
+                                    <span class="text-[9px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">${p.color}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price & Add Button -->
+                        <div class="p-3 pt-0">
+                            <div class="text-xs font-black text-slate-900 mb-2">${p.price.toLocaleString('cs-CZ')} Kč</div>
+                            <button onclick="addToCart(${p.id})" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] transition-all flex items-center justify-center gap-1 shadow-sm">
+                                <span>+ Do košíku</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // -------------------------------------------------------------
+        // FAVORITES LOGIC
+        // -------------------------------------------------------------
+
+        function toggleFavorite(productId) {
+            if (favorites.has(productId)) {
+                favorites.delete(productId);
+                showToast("Položka odebrána z oblíbených");
+            } else {
+                favorites.add(productId);
+                showToast("Položka uložena do oblíbených 💚");
+            }
+            updateBadges();
+            renderProducts();
+            renderFavorites();
+        }
+
+        function renderFavorites() {
+            const grid = document.getElementById('favorites-grid');
+            const emptyMsg = document.getElementById('favorites-empty');
+            grid.innerHTML = '';
+
+            const favList = products.filter(p => favorites.has(p.id));
+
+            if (favList.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                grid.classList.add('hidden');
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            favList.forEach(p => {
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 p-2.5 relative">
+                        <button onclick="toggleFavorite(${p.id})" class="absolute top-2 right-2 z-10 text-xs bg-white/80 rounded-full p-1 shadow">✕</button>
+                        <img src="${p.img}" class="w-full h-32 object-cover rounded-xl mb-2">
+                        <span class="text-[9px] font-bold text-teal-600 uppercase">${p.brand}</span>
+                        <h4 class="text-xs font-bold text-slate-800 line-clamp-1">${p.name}</h4>
+                        <p class="text-xs font-black text-slate-900 mt-1">${p.price.toLocaleString('cs-CZ')} Kč</p>
+                        <button onclick="addToCart(${p.id})" class="w-full mt-2 bg-teal-600 text-white font-bold py-1.5 rounded-lg text-[10px]">
+                            + Do košíku
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // -------------------------------------------------------------
+        // IN-APP CART LOGIC (GROUPED BY BRAND)
+        // -------------------------------------------------------------
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existing = cart.find(item => item.product.id === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ product, quantity: 1 });
+            }
+
+            showToast(`Přidáno do košíku: ${product.name}`);
+            updateBadges();
+            renderCart();
+        }
+
+        function updateCartQuantity(productId, delta) {
+            const index = cart.findIndex(item => item.product.id === productId);
+            if (index > -1) {
+                cart[index].quantity += delta;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+            }
+            updateBadges();
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-grouped-container');
+            const emptyMsg = document.getElementById('cart-empty');
+            const totalBadge = document.getElementById('cart-total-badge');
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                totalBadge.innerText = 'Celkem: 0 Kč';
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+
+            // Group items by Brand
+            const grouped = {};
+            let grandTotal = 0;
+
+            cart.forEach(item => {
+                const brand = item.product.brand;
+                if (!grouped[brand]) {
+                    grouped[brand] = [];
+                }
+                grouped[brand].push(item);
+                grandTotal += item.product.price * item.quantity;
+            });
+
+            totalBadge.innerText = `Celkem: ${grandTotal.toLocaleString('cs-CZ')} Kč`;
+
+            // Render each brand group
+            for (const [brandName, items] of Object.entries(grouped)) {
+                let brandSubtotal = 0;
+                let itemsHtml = '';
+
+                items.forEach(item => {
+                    const itemTotal = item.product.price * item.quantity;
+                    brandSubtotal += itemTotal;
+
+                    itemsHtml += `
+                        <div class="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
+                            <div class="flex items-center gap-3">
+                                <img src="${item.product.img}" class="w-12 h-12 object-cover rounded-xl bg-slate-100">
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-800">${item.product.name}</h4>
+                                    <p class="text-[10px] text-slate-500">${item.product.size} • ${item.product.color}</p>
+                                    <p class="text-xs font-black text-teal-700 mt-0.5">${item.product.price.toLocaleString('cs-CZ')} Kč</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2 bg-slate-100 rounded-xl p-1 border border-slate-200">
+                                <button onclick="updateCartQuantity(${item.product.id}, -1)" class="w-6 h-6 bg-white text-slate-700 rounded-lg text-xs font-bold shadow-sm">-</button>
+                                <span class="text-xs font-bold px-1 text-slate-800">${item.quantity}</span>
+                                <button onclick="updateCartQuantity(${item.product.id}, 1)" class="w-6 h-6 bg-white text-slate-700 rounded-lg text-xs font-bold shadow-sm">+</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+                        <!-- Brand Header -->
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-base">🏬</span>
+                                <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">${brandName}</h3>
+                            </div>
+                            <span class="text-xs font-bold text-slate-500">Mezisoučet: ${brandSubtotal.toLocaleString('cs-CZ')} Kč</span>
+                        </div>
+
+                        <!-- Brand Items -->
+                        <div class="divide-y divide-slate-100 my-1">
+                            ${itemsHtml}
+                        </div>
+
+                        <!-- Brand Checkout Action -->
+                        <button onclick="openCheckoutModal('${brandName}')" class="w-full mt-3 bg-teal-600 hover:bg-teal-700 active:scale-98 text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2">
+                            <span>Koupit na webu ${brandName} (${brandSubtotal.toLocaleString('cs-CZ')} Kč)</span>
+                            <span class="text-sm">↗</span>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // -------------------------------------------------------------
+        // CHECKOUT REDIRECT SIMULATION
+        // -------------------------------------------------------------
+
+        function openCheckoutModal(brandName) {
+            pendingRedirectBrand = brandName;
+            const brandInfo = BRANDS_DB[brandName] || { domain: 'https://www.lokalniznacka.cz' };
+            
+            // Collect items for this brand
+            const brandItems = cart.filter(i => i.product.brand === brandName);
+            const queryParams = brandItems.map(i => `${i.product.id}:${i.quantity}`).join(',');
+
+            const generatedUrl = `${brandInfo.domain}/checkout?ref=ecokousky&items=${queryParams}`;
+
+            document.getElementById('checkout-brand-name').innerText = brandName;
+            document.getElementById('checkout-url').innerText = generatedUrl;
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        function confirmRedirect() {
+            closeModal('checkout-modal');
+            showToast(`Přesměrovávám do pokladny...`);
+            setTimeout(() => {
+                showToast(`Nákup úspěšně předán na web tvůrce!`);
+            }, 1000);
+        }
+
+        // -------------------------------------------------------------
+        // BRANDS DIRECTORY RENDERING
+        // -------------------------------------------------------------
+
+        function renderBrandsList() {
+            const list = document.getElementById('brands-list');
+            list.innerHTML = '';
+
+            for (const [brandName, info] of Object.entries(BRANDS_DB)) {
+                const badgesHtml = info.badges.map(b => 
+                    `<span class="text-[9px] font-bold bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200">${b}</span>`
+                ).join(' ');
+
+                list.innerHTML += `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <h3 class="text-sm font-black text-slate-900">${brandName}</h3>
+                                <div class="text-[11px] font-bold text-amber-500 mt-0.5">⭐ ${info.rating}</div>
+                            </div>
+                            <button onclick="openBrandModal('${brandName}')" class="text-xs font-bold text-teal-600 bg-teal-50 border border-teal-200 px-3 py-1 rounded-xl">
+                                O značce
+                            </button>
+                        </div>
+                        <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">${info.story}</p>
+                        <div class="flex flex-wrap gap-1">
+                            ${badgesHtml}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function openBrandModal(brandName) {
+            const info = BRANDS_DB[brandName];
+            if (!info) return;
+
+            document.getElementById('modal-brand-title').innerText = brandName;
+            document.getElementById('modal-brand-stars').innerText = `⭐ ${info.rating} Spokojenost zákazníků`;
+            document.getElementById('modal-brand-story').innerText = info.story;
+
+            const badgesContainer = document.getElementById('modal-brand-badges');
+            badgesContainer.innerHTML = info.badges.map(b => 
+                `<span class="text-[10px] font-bold bg-teal-50 text-teal-800 px-2.5 py-1 rounded-lg border border-teal-200">${b}</span>`
+            ).join('');
+
+            const reviewsContainer = document.getElementById('modal-brand-reviews');
+            reviewsContainer.innerHTML = info.reviews.map(r => 
+                `<div class="bg-slate-50 p-2.5 rounded-xl text-[11px] text-slate-600 border border-slate-100">“${r}”</div>`
+            ).join('');
+
+            document.getElementById('brand-modal').classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // FILTERS, SEARCH & NAVIGATION
+        // -------------------------------------------------------------
+
+        function setCategoryFilter(category) {
+            activeCategory = category;
+            document.querySelectorAll('.filter-cat-btn').forEach(btn => {
+                if (btn.dataset.cat === category) {
+                    btn.className = "filter-cat-btn px-3 py-1.5 rounded-full font-bold whitespace-nowrap bg-teal-600 text-white shadow-sm transition-all";
+                } else {
+                    btn.className = "filter-cat-btn px-3 py-1.5 rounded-full font-semibold whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all";
+                }
+            });
+            applyFilters();
+        }
+
+        function applyFilters() {
+            renderProducts();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value.trim();
+            renderProducts();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.remove('text-slate-400');
+                    btn.classList.add('text-teal-600');
+                } else {
+                    btn.classList.remove('text-teal-600');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            if (tabName === 'favorites') renderFavorites();
+            if (tabName === 'cart') renderCart();
+            if (tabName === 'brands') renderBrandsList();
+        }
+
+        function updateBadges() {
+            const favBadge = document.getElementById('fav-badge');
+            if (favorites.size > 0) {
+                favBadge.innerText = favorites.size;
+                favBadge.classList.remove('hidden');
+            } else {
+                favBadge.classList.add('hidden');
+            }
+
+            const cartBadge = document.getElementById('cart-badge');
+            const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+            if (totalItems > 0) {
+                cartBadge.innerText = totalItems;
+                cartBadge.classList.remove('hidden');
+            } else {
+                cartBadge.classList.add('hidden');
+            }
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.innerText = message;
+
+            container.classList.remove('opacity-0', 'translate-y-[-10px]');
+            container.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                container.classList.remove('opacity-100', 'translate-y-0');
+                container.classList.add('opacity-0', 'translate-y-[-10px]');
+            }, 2500);
+        }
+
+        // -------------------------------------------------------------
+        // AUTOMATIC DISCOVERY SIMULATION
+        // -------------------------------------------------------------
+
+        setTimeout(() => {
+            products = [...products, ...AUTO_DISCOVERED_PRODUCTS];
+            renderProducts();
+
+            // Update badge UI
+            const discoveryBadge = document.getElementById('discovery-badge');
+            discoveryBadge.className = "flex items-center gap-1.5 bg-white text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full border border-teal-300 shadow-sm";
+            document.getElementById('discovery-text').innerText = "✨ 3 nové kousky";
+
+            document.getElementById('status-bar').innerText = "✓ Našli jsme 3 nové lokální kousky od českých a slovenských tvůrců!";
+            document.getElementById('status-bar').classList.remove('animate-pulse-subtle');
+
+            showToast("✨ Objeveny 3 nové lokální kousky!");
+        }, 3000);
+
+        // INITIAL LOAD
+        renderProducts();
+        updateBadges();
+    </script>
+</body>
+</html>
